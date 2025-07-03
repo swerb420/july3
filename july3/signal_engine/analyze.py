@@ -22,12 +22,6 @@ def behavior_pattern_score(cluster_id):
         "confidence_boost": boost
     }
 
-def final_llm_check(signals, signal_id, cluster_id):
-    patterns = behavior_pattern_score(cluster_id)
-    signals['patterns'] = patterns
-    signals['final_confidence'] = signals.get('base_confidence', 0.8) + patterns['confidence_boost']
-    ...
-
 def multi_wallet_check(token):
     return True  # Pseudo: real version checks cluster alignments in your wallet graph.
 

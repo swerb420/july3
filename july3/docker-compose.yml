@@ -14,12 +14,6 @@ services:
     depends_on:
       - redis
 
-  wallet_tracker:
-    build: ./wallet_tracker
-    restart: always
-    depends_on:
-      - redis
-
   wallet_watcher:
     build: ./wallet_watcher
     restart: always
