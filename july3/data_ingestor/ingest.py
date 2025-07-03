@@ -7,6 +7,7 @@ import snscrape.modules.twitter as sntwitter
 from transformers import pipeline
 from config import *
 from shared.async_utils import safe_request_async
+import feedparser
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +34,25 @@ async def fetch_news() -> None:
         r.set('newsapi', text)
     except Exception as e:
         logger.error("News API fetch failed: %s", e)
+
+async def fetch_rss_feeds() -> None:
+    """Fetch additional RSS feeds and store a short summary."""
+    feeds: dict[str, list[dict[str, str]]] = {}
+    for url in RSS_FEEDS:
+        try:
+            text = await safe_request_async('get', url)
+            parsed = feedparser.parse(text)
+            feeds[url] = [
+                {
+                    'title': entry.get('title', ''),
+                    'link': entry.get('link', '')
+                }
+                for entry in parsed.entries[:5]
+            ]
+        except Exception as e:
+            logger.error("RSS fetch failed for %s: %s", url, e)
+    if feeds:
+        r.set('rss_feeds', json.dumps(feeds))
 
 async def scrape_twitter() -> None:
     """Scrape a few tweets containing the keyword 'crypto'."""
@@ -63,6 +83,7 @@ async def main() -> None:
             await asyncio.gather(
                 fetch_kraken(),
                 fetch_news(),
+                fetch_rss_feeds(),
                 scrape_twitter(),
             )
             await nlp_sentiment()

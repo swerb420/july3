@@ -1,6 +1,7 @@
 import os
 import redis
 import sqlite3
+import json
 import logging
 from telegram import Update, Bot
 from telegram.ext import Updater, CommandHandler, CallbackContext
@@ -97,6 +98,21 @@ def wallet_report(update: Update, context: CallbackContext):
     except Exception as e:
         update.message.reply_text(f"⚠️ Report error: {e}")
 
+# ✅ 8) Latest news from RSS feeds
+def news(update: Update, context: CallbackContext):
+    try:
+        feeds = json.loads(r.get('rss_feeds') or '{}')
+        if not feeds:
+            update.message.reply_text("No news available.")
+            return
+
+        for source, items in feeds.items():
+            update.message.reply_text(f"\nSource: {source}")
+            for item in items:
+                update.message.reply_text(f"- {item['title']}\n{item['link']}")
+    except Exception as e:
+        update.message.reply_text(f"⚠️ News error: {e}")
+
 # === Register handlers ===
 
 def main():
@@ -110,6 +126,7 @@ def main():
     dp.add_handler(CommandHandler("panic", panic))
     dp.add_handler(CommandHandler("label_wallet", label_wallet))
     dp.add_handler(CommandHandler("wallet_report", wallet_report))
+    dp.add_handler(CommandHandler("news", news))
 
     update_startup = (
         "✅ Bot online!\n"
@@ -119,7 +136,8 @@ def main():
         "/logs\n"
         "/panic\n"
         "/label_wallet WALLET_ID LABEL\n"
-        "/wallet_report CLUSTER_ID"
+        "/wallet_report CLUSTER_ID\n"
+        "/news"
     )
     bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=update_startup)
     logger.info("Telegram bot started")

@@ -58,6 +58,12 @@ class Config:
     # API Rate Limits
     INGEST_INTERVAL: int = int(os.getenv('INGEST_INTERVAL', '300'))  # 5 minutes
     WATCHER_INTERVAL: int = int(os.getenv('WATCHER_INTERVAL', '600'))  # 10 minutes
+
+    # Additional RSS feeds for news ingestion (comma separated URLs)
+    RSS_FEEDS = os.getenv(
+        'RSS_FEEDS',
+        'https://cointelegraph.com/rss,https://www.coindesk.com/arc/outboundfeeds/rss/'
+    ).split(',')
     
     @classmethod
     def validate_required_config(cls) -> None:
