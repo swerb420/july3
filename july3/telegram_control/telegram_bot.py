@@ -6,13 +6,11 @@ from telegram.ext import Updater, CommandHandler, CallbackContext
 from config import *
 
 # Connect to Redis & SQLite
-r = redis.Redis(host='localhost', port=6379, db=0)
-conn = sqlite3.connect('wallet_db.sqlite', check_same_thread=False)
+r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
+conn = sqlite3.connect(DB_PATH, check_same_thread=False)
 c = conn.cursor()
 
-# Setup Bot
-TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
+# Setup Bot (token and chat ID provided by config)
 bot = Bot(TELEGRAM_BOT_TOKEN)
 
 # === Handlers ===

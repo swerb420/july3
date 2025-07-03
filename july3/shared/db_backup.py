@@ -1,9 +1,7 @@
 import shutil
 import datetime
 import os
-
-DB_PATH = 'wallet_db.sqlite'
-BACKUP_DIR = os.getenv('DB_BACKUP_PATH', './db_backups/')
+from config import DB_PATH, BACKUP_DIR
 
 def backup():
     now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")

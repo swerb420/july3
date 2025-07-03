@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+*.sqlite
+.env
+DB_Backups/
+**/__pycache__/

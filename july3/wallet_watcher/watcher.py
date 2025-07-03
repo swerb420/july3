@@ -3,7 +3,7 @@ import requests
 import time
 from config import *
 
-r = redis.Redis(host='localhost', port=6379, db=0)
+r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
 
 def whale_alert_rss():
     url = 'https://feeds.whale-alert.io/transactions.rss'

@@ -3,7 +3,7 @@ from googleapiclient.discovery import build
 import sqlite3
 from config import *
 
-conn = sqlite3.connect('wallet_db.sqlite')
+conn = sqlite3.connect(DB_PATH)
 c = conn.cursor()
 
 SCOPES = ['https://www.googleapis.com/auth/drive']

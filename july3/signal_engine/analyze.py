@@ -4,8 +4,8 @@ import json
 from openai import OpenAI
 from config import *
 
-r = redis.Redis(host='localhost', port=6379, db=0)
-conn = sqlite3.connect('wallet_db.sqlite')
+r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
+conn = sqlite3.connect(DB_PATH)
 
 c = conn.cursor()
 c.execute('''CREATE TABLE IF NOT EXISTS signals

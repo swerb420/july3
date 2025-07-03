@@ -7,7 +7,7 @@ import snscrape.modules.twitter as sntwitter
 from transformers import pipeline
 from config import *
 
-r = redis.Redis(host='localhost', port=6379, db=0)
+r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
 sentiment_pipeline = pipeline('sentiment-analysis')
 
 def fetch_kraken(symbol='BTC/USD'):
