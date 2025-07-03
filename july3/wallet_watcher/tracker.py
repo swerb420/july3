@@ -2,6 +2,7 @@ import redis
 import sqlite3
 import networkx as nx
 import json
+from config import *
 
 # Connect Redis & SQLite
 r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
