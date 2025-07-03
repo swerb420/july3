@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  data_ingestor:
+    build: ./data_ingestor
+    restart: always
+    depends_on:
+      - redis
+
+  wallet_tracker:
+    build: ./wallet_tracker
+    restart: always
+    depends_on:
+      - redis
+
+  wallet_watcher:
+    build: ./wallet_watcher
+    restart: always
+    depends_on:
+      - redis
+
+  signal_engine:
+    build: ./signal_engine
+    restart: always
+    depends_on:
+      - redis
+
+  execution_engine:
+    build: ./execution_engine
+    restart: always
+    depends_on:
+      - redis
+
+  telegram_control:
+    build: ./telegram_control
+    restart: always
+    depends_on:
+      - redis
