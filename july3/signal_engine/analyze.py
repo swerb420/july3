@@ -1,8 +1,11 @@
 import redis
 import sqlite3
 import json
+import logging
 from openai import OpenAI
 from config import *
+
+logger = logging.getLogger(__name__)
 
 r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
 conn = sqlite3.connect(DB_PATH)
@@ -41,19 +44,23 @@ def final_llm_check(signals, signal_id, cluster_id):
             client = OpenAI(api_key=OPENAI_API_KEY)
             response = client.chat.completions.create(
                 model="gpt-4o",
-                messages=[{"role": "system", "content": "Quant risk engine."},
-                          {"role": "user", "content": json.dumps(signals)}]
+                messages=[
+                    {"role": "system", "content": "Quant risk engine."},
+                    {"role": "user", "content": json.dumps(signals)},
+                ],
             )
             decision = response.choices[0].message
         else:
             decision = "Claude flow placeholder"
 
-        c.execute("INSERT INTO signals VALUES (?, ?, ?, datetime('now'))",
-                  (signal_id, cluster_id, json.dumps(signals)))
+        c.execute(
+            "INSERT INTO signals VALUES (?, ?, ?, datetime('now'))",
+            (signal_id, cluster_id, json.dumps(signals)),
+        )
         conn.commit()
         return decision
-    except:
-        print("⚠️ LLM failed — fallback DRY_RUN.")
+    except Exception as e:
+        logger.error("LLM failed — fallback DRY_RUN: %s", e)
         return "DRY_RUN"
 
 def main():
@@ -63,7 +70,10 @@ def main():
         "nlp_sentiment": float(r.get('nlp_sentiment_score') or 0),
         "github_stars": int(r.get('github_stars_solana') or 0)
     }
-    final_llm_check(signals, "sig001", "cluster123")
+    try:
+        final_llm_check(signals, "sig001", "cluster123")
+    except Exception:
+        logger.exception("Signal analysis failed")
 
 if __name__ == "__main__":
     main()
