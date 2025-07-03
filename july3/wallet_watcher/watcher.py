@@ -1,42 +1,48 @@
 import redis
-import time
+import asyncio
 import logging
 from config import *
-from shared.utils import safe_request
+from shared.async_utils import safe_request_async
 
 logger = logging.getLogger(__name__)
 
 r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
 
-def whale_alert_rss():
+async def whale_alert_rss():
     url = 'https://feeds.whale-alert.io/transactions.rss'
     try:
-        res = safe_request('get', url)
-        r.set('whale_alert', res.text)
+        if r.exists('whale_alert'):
+            return
+        text = await safe_request_async('get', url)
+        r.setex('whale_alert', WATCHER_INTERVAL, text)
     except Exception as e:
         logger.error('Whale alert fetch failed: %s', e)
 
-def arkham_labels():
+async def arkham_labels():
     url = 'https://arkham-intelligence.com/api/labels'
     try:
-        res = safe_request('get', url)
-        r.set('arkham_labels', res.text)
+        if r.exists('arkham_labels'):
+            return
+        text = await safe_request_async('get', url)
+        r.setex('arkham_labels', WATCHER_INTERVAL, text)
     except Exception as e:
         logger.error('Arkham labels fetch failed: %s', e)
 
-def main():
+async def main():
     while True:
         try:
-            whale_alert_rss()
-            arkham_labels()
+            await asyncio.gather(
+                whale_alert_rss(),
+                arkham_labels(),
+            )
             logger.info("Wallet watcher updated")
         except Exception:
             logger.exception("Watcher cycle failed")
-        time.sleep(600)
+        await asyncio.sleep(WATCHER_INTERVAL)
 
 if __name__ == "__main__":
     try:
-        main()
+        asyncio.run(main())
     except KeyboardInterrupt:
         pass
     except Exception:
