@@ -4,8 +4,8 @@ import networkx as nx
 import json
 
 # Connect Redis & SQLite
-r = redis.Redis(host='localhost', port=6379, db=0)
-conn = sqlite3.connect('wallet_db.sqlite')
+r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
+conn = sqlite3.connect(DB_PATH)
 c = conn.cursor()
 
 # Create table if needed

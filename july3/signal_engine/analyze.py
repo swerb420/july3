@@ -4,8 +4,8 @@ import json
 from openai import OpenAI
 from config import *
 
-r = redis.Redis(host='localhost', port=6379, db=0)
-conn = sqlite3.connect('wallet_db.sqlite')
+r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
+conn = sqlite3.connect(DB_PATH)
 
 c = conn.cursor()
 c.execute('''CREATE TABLE IF NOT EXISTS signals
@@ -21,12 +21,6 @@ def behavior_pattern_score(cluster_id):
         "trust_score": trust,
         "confidence_boost": boost
     }
-
-def final_llm_check(signals, signal_id, cluster_id):
-    patterns = behavior_pattern_score(cluster_id)
-    signals['patterns'] = patterns
-    signals['final_confidence'] = signals.get('base_confidence', 0.8) + patterns['confidence_boost']
-    ...
 
 def multi_wallet_check(token):
     return True  # Pseudo: real version checks cluster alignments in your wallet graph.

@@ -3,9 +3,9 @@ import sqlite3
 import redis
 from config import *
 
-conn = sqlite3.connect('wallet_db.sqlite')
+conn = sqlite3.connect(DB_PATH)
 c = conn.cursor()
-r = redis.Redis(host='localhost', port=6379, db=0)
+r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
 
 c.execute('''CREATE TABLE IF NOT EXISTS trades
 (trade_id TEXT, cluster_id TEXT, pnl REAL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
