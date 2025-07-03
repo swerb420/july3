@@ -1,9 +1,12 @@
 import os
 import redis
 import sqlite3
+import logging
 from telegram import Update, Bot
 from telegram.ext import Updater, CommandHandler, CallbackContext
 from config import *
+
+logger = logging.getLogger(__name__)
 
 # Connect to Redis & SQLite
 r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
@@ -119,9 +122,13 @@ def main():
         "/wallet_report CLUSTER_ID"
     )
     bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=update_startup)
+    logger.info("Telegram bot started")
 
     updater.start_polling()
     updater.idle()
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception:
+        logger.exception("Telegram bot crashed")

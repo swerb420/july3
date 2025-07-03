@@ -2,6 +2,11 @@ import redis
 import sqlite3
 import networkx as nx
 import json
+import logging
+from config import *
+from shared.utils import retry
+
+logger = logging.getLogger(__name__)
 
 # Connect Redis & SQLite
 r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
@@ -25,7 +30,7 @@ def estimate_wallet_pnl(wallet_id):
         pnl = 50000.0
         return pnl
     except Exception as e:
-        print(f"⚠️ estimate_wallet_pnl error for {wallet_id}: {e}")
+        logger.error("estimate_wallet_pnl error for %s: %s", wallet_id, e)
         return 0.0
 
 def get_parent_depth(wallet_id):
@@ -37,7 +42,7 @@ def get_parent_depth(wallet_id):
         else:
             return 0
     except Exception as e:
-        print(f"⚠️ get_parent_depth error: {e}")
+        logger.error("get_parent_depth error: %s", e)
         return 0
 
 def track_hops():
@@ -57,20 +62,28 @@ def track_hops():
         trust_score = max(0.0, min(avg_pnl / 10000, 1.0))
 
         try:
-            c.execute("INSERT OR IGNORE INTO wallets VALUES (?, ?, datetime('now'), ?, ?, ?, ?, ?)",
-                      (to_wallet, "cluster123", from_wallet, avg_pnl, hop_depth, '', trust_score))
+            c.execute(
+                "INSERT OR IGNORE INTO wallets VALUES (?, ?, datetime('now'), ?, ?, ?, ?, ?)",
+                (to_wallet, "cluster123", from_wallet, avg_pnl, hop_depth, '', trust_score),
+            )
             conn.commit()
-            print(f"✅ Added wallet {to_wallet}: depth={hop_depth}, pnl={avg_pnl}, trust={trust_score:.2f}")
+            logger.info(
+                "Added wallet %s: depth=%s, pnl=%s, trust=%.2f",
+                to_wallet, hop_depth, avg_pnl, trust_score,
+            )
         except Exception as e:
-            print(f"⚠️ DB insert error: {e}")
+            logger.error("DB insert error: %s", e)
 
         G.add_edge(from_wallet, to_wallet)
 
     try:
         nx.write_gexf(G, 'wallet_graph.gexf')
-        print("✅ Wallet graph saved as GEXF.")
+        logger.info("Wallet graph saved as GEXF")
     except Exception as e:
-        print(f"⚠️ Graph write error: {e}")
+        logger.error("Graph write error: %s", e)
 
 if __name__ == "__main__":
-    track_hops()
+    try:
+        track_hops()
+    except Exception:
+        logger.exception("Tracker crashed")
