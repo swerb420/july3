@@ -82,6 +82,26 @@ def label_wallet(update: Update, context: CallbackContext):
     except Exception as e:
         update.message.reply_text(f"⚠️ DB error: {e}")
 
+# ✅ 6a) Add wallet to tracker
+def add_wallet(update: Update, context: CallbackContext):
+    if len(context.args) < 2:
+        update.message.reply_text("Usage: /add_wallet WALLET_ID CLUSTER_ID")
+        return
+    wallet_id, cluster_id = context.args[0], context.args[1]
+    try:
+        avg_pnl = estimate_wallet_pnl(wallet_id)
+        trust_score = max(0.0, min(avg_pnl / 10000, 1.0))
+        c.execute(
+            "INSERT OR IGNORE INTO wallets VALUES (?, ?, datetime('now'), ?, ?, ?, ?, ?)",
+            (wallet_id, cluster_id, '', avg_pnl, 0, '', trust_score),
+        )
+        conn.commit()
+        update.message.reply_text(
+            f"✅ Wallet {wallet_id} added to {cluster_id}. PnL: {avg_pnl}"
+        )
+    except Exception as e:
+        update.message.reply_text(f"⚠️ DB error: {e}")
+
 # ✅ 7) Report cluster wallets
 def wallet_report(update: Update, context: CallbackContext):
     if len(context.args) < 1:
@@ -97,6 +117,45 @@ def wallet_report(update: Update, context: CallbackContext):
             update.message.reply_text(f"Wallet: {row}")
     except Exception as e:
         update.message.reply_text(f"⚠️ Report error: {e}")
+
+# ✅ 8a) Manage RSS feed URLs
+def add_feed(update: Update, context: CallbackContext):
+    if len(context.args) < 1:
+        update.message.reply_text("Usage: /add_feed URL")
+        return
+    url = context.args[0]
+    try:
+        feeds = json.loads(r.get('rss_feed_urls') or '[]')
+        if url not in feeds:
+            feeds.append(url)
+            r.set('rss_feed_urls', json.dumps(feeds))
+        update.message.reply_text(f"✅ Feed added: {url}")
+    except Exception as e:
+        update.message.reply_text(f"⚠️ Feed error: {e}")
+
+def remove_feed(update: Update, context: CallbackContext):
+    if len(context.args) < 1:
+        update.message.reply_text("Usage: /remove_feed URL")
+        return
+    url = context.args[0]
+    try:
+        feeds = json.loads(r.get('rss_feed_urls') or '[]')
+        if url in feeds:
+            feeds.remove(url)
+            r.set('rss_feed_urls', json.dumps(feeds))
+        update.message.reply_text(f"✅ Feed removed: {url}")
+    except Exception as e:
+        update.message.reply_text(f"⚠️ Feed error: {e}")
+
+def list_feeds(update: Update, context: CallbackContext):
+    try:
+        feeds = json.loads(r.get('rss_feed_urls') or '[]')
+        if not feeds:
+            feeds = RSS_FEEDS
+        msg = "Current feeds:\n" + "\n".join(feeds)
+        update.message.reply_text(msg)
+    except Exception as e:
+        update.message.reply_text(f"⚠️ Feed error: {e}")
 
 # ✅ 8) Latest news from RSS feeds
 def news(update: Update, context: CallbackContext):
@@ -125,8 +184,12 @@ def main():
     dp.add_handler(CommandHandler("logs", logs))
     dp.add_handler(CommandHandler("panic", panic))
     dp.add_handler(CommandHandler("label_wallet", label_wallet))
+    dp.add_handler(CommandHandler("add_wallet", add_wallet))
     dp.add_handler(CommandHandler("wallet_report", wallet_report))
     dp.add_handler(CommandHandler("news", news))
+    dp.add_handler(CommandHandler("add_feed", add_feed))
+    dp.add_handler(CommandHandler("remove_feed", remove_feed))
+    dp.add_handler(CommandHandler("list_feeds", list_feeds))
 
     update_startup = (
         "✅ Bot online!\n"
@@ -136,7 +199,11 @@ def main():
         "/logs\n"
         "/panic\n"
         "/label_wallet WALLET_ID LABEL\n"
+        "/add_wallet WALLET_ID CLUSTER_ID\n"
         "/wallet_report CLUSTER_ID\n"
+        "/add_feed URL\n"
+        "/remove_feed URL\n"
+        "/list_feeds\n"
         "/news"
     )
     bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=update_startup)

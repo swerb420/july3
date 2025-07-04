@@ -18,22 +18,22 @@ async def whale_alert_rss():
     except Exception as e:
         logger.error('Whale alert fetch failed: %s', e)
 
-async def arkham_labels():
-    url = 'https://arkham-intelligence.com/api/labels'
+async def wallet_labels():
+    url = 'https://api.ethplorer.io/getTop?apiKey=freekey&criteria=cap&limit=50'
     try:
-        if r.exists('arkham_labels'):
+        if r.exists('wallet_labels'):
             return
         text = await safe_request_async('get', url)
-        r.setex('arkham_labels', WATCHER_INTERVAL, text)
+        r.setex('wallet_labels', WATCHER_INTERVAL, text)
     except Exception as e:
-        logger.error('Arkham labels fetch failed: %s', e)
+        logger.error('Ethplorer fetch failed: %s', e)
 
 async def main():
     while True:
         try:
             await asyncio.gather(
                 whale_alert_rss(),
-                arkham_labels(),
+                wallet_labels(),
             )
             logger.info("Wallet watcher updated")
         except Exception:
