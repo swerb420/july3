@@ -38,7 +38,11 @@ async def fetch_news() -> None:
 async def fetch_rss_feeds() -> None:
     """Fetch additional RSS feeds and store a short summary."""
     feeds: dict[str, list[dict[str, str]]] = {}
-    for url in RSS_FEEDS:
+    try:
+        urls = json.loads(r.get('rss_feed_urls') or '[]') or RSS_FEEDS
+    except Exception:
+        urls = RSS_FEEDS
+    for url in urls:
         try:
             text = await safe_request_async('get', url)
             parsed = feedparser.parse(text)

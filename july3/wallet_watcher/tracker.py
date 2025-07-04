@@ -2,6 +2,7 @@ import redis
 import sqlite3
 import networkx as nx
 import json
+import requests
 import logging
 from config import *
 from shared.utils import retry
@@ -25,10 +26,14 @@ c.execute('''CREATE TABLE IF NOT EXISTS wallets
  trust_score REAL DEFAULT 0.0)''')
 
 def estimate_wallet_pnl(wallet_id):
+    """Approximate wallet PnL using the free Ethplorer API."""
     try:
-        # Placeholder: plug in Etherscan or Solscan
-        pnl = 50000.0
-        return pnl
+        url = f"https://api.ethplorer.io/getAddressInfo/{wallet_id}?apiKey=freekey"
+        data = requests.get(url, timeout=10).json()
+        eth = data.get("ETH", {})
+        total_in = float(eth.get("totalInUSD") or eth.get("totalIn", 0))
+        total_out = float(eth.get("totalOutUSD") or eth.get("totalOut", 0))
+        return total_in - total_out
     except Exception as e:
         logger.error("estimate_wallet_pnl error for %s: %s", wallet_id, e)
         return 0.0
