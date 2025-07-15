@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 import subprocess
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
 
 def create_swap():
     subprocess.run(["sudo", "fallocate", "-l", "2G", "/swapfile"])
@@ -11,11 +14,13 @@ def create_swap():
 def install_deps():
     subprocess.run(["sudo", "apt-get", "update"])
     subprocess.run(["sudo", "apt-get", "install", "-y", "docker.io", "docker-compose", "python3-pip", "redis-server"])
-    subprocess.run(["pip3", "install", "-r", "requirements.txt"])
+    requirements_path = str(BASE_DIR / "requirements.txt")
+    subprocess.run(["pip3", "install", "-r", requirements_path])
     print("✅ Dependencies installed.")
 
 def build_and_run():
-    subprocess.run(["docker-compose", "up", "-d", "--build"])
+    compose_file = str(BASE_DIR / "docker-compose.yml")
+    subprocess.run(["docker-compose", "-f", compose_file, "up", "-d", "--build"])
     print("✅ Containers built and running.")
 
 def setup_cron():
