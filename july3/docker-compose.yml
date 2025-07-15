@@ -9,31 +9,41 @@ services:
       - "6379:6379"
 
   data_ingestor:
-    build: ./data_ingestor
+    build:
+      context: .
+      dockerfile: ./data_ingestor/Dockerfile
     restart: always
     depends_on:
       - redis
 
   wallet_watcher:
-    build: ./wallet_watcher
+    build:
+      context: .
+      dockerfile: ./wallet_watcher/Dockerfile
     restart: always
     depends_on:
       - redis
 
   signal_engine:
-    build: ./signal_engine
+    build:
+      context: .
+      dockerfile: ./signal_engine/Dockerfile
     restart: always
     depends_on:
       - redis
 
   execution_engine:
-    build: ./execution_engine
+    build:
+      context: .
+      dockerfile: ./execution_engine/Dockerfile
     restart: always
     depends_on:
       - redis
 
   telegram_control:
-    build: ./telegram_control
+    build:
+      context: .
+      dockerfile: ./telegram_control/Dockerfile
     restart: always
     depends_on:
       - redis
