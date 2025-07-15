@@ -6,6 +6,7 @@ import logging
 from telegram import Update, Bot
 from telegram.ext import Updater, CommandHandler, CallbackContext
 from config import *
+from wallet_watcher.tracker import estimate_wallet_pnl
 
 logger = logging.getLogger(__name__)
 
